@@ -167,6 +167,39 @@
                 <section>
                     <img src="./dataflow-minimap.svg" style="width: 50%; margin-top: -0.6em" />
                 </section>
+                <section>
+                    <h3>Implications of cycle app = function</h3>
+                    <img src="./nested-components.svg" style="background: white; width: 80% !important; display: block mergin: auto;" />
+                    <ul class="yellow">
+                        <li>Nestable</li>
+                        <li>Wrappable</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Nestable</h3>
+                    <pre><code data-trim style="height: auto !impotant; width: 110% !important; max-height: 100%;" class="hljs javascript">
+                    import Greeter from './greeter';
+                    import Counter from './counter';
+
+                    function main(sources) {
+                      const greeterSinks = Greeter(sources);
+                      const counterSinks = Counter(sources);
+
+                      const vdom$ = xs.combine(greeterSinks.DOM, counterSinks.DOM)
+                        .map(children =>
+                            <div>
+                                <h1>Some children</h1>
+                                { children }
+                            </div>
+                        );
+
+                      return {
+                        DOM: vdom$
+                      };
+                    }
+                    </code></pre>
+
+                </section>
             <div>
 		</div>
 
