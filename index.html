@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+		<title>FRP with Cycle.js</title>
 
 		<link rel="stylesheet" href="css/reveal.css">
 		<link rel="stylesheet" href="css/theme/black.css">
@@ -20,13 +20,77 @@
 			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
 			document.getElementsByTagName( 'head' )[0].appendChild( link );
 		</script>
+        <style>
+        .yellow {
+            color: yellow !important;
+        }
+        .small {
+            font-size: 0.5em !important;
+            margin-top: -0.5em !important;
+        }
+        </style>
 	</head>
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
-			</div>
+				<section>
+                    <h2>Introduction to <br>
+                        <span class="yellow">functional reactive programming</span>
+                        <br>with Cycle.js</h2>
+                    <p>Jan van Brügge</p>
+                </section>
+				<section>
+                    <h2>Why streams?</h2>
+                </section>
+                <section>
+                    <h3>Transforming data - <span class="yellow">synchronous</span></h3>
+                    <pre><code data-trim data-noescape>
+                    [1, 2, 3, 4, 5]
+                        .map(x => x * 2)
+                        .forEach(x => console.log(x));
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Transforming data - <span class="yellow">asynchronous</span></h3>
+                    <pre><code data-trim data-noescape>
+                    Promise.resolve([1, 2, 3, 4, 5]) //Or from API
+                        .then(arr => arr
+                            .map(x => x * 2)
+                            .forEach(x => console.log(x))
+                        );
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Transforming data - <span class="yellow">streaming</span></h3>
+                    <pre><code data-trim data-noescape>
+                    Observable.from([1, 2, 3, 4, 5]) //Or from a websocket
+                        .map(x => x * 2)
+                        .subscribe(x => console.log(x));
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="yellow">The catch</h3>
+                    <span>Array \(\subset\) Promise \(\subset\) Stream</span>
+                </section>
+                <section>
+                    <h3>What problems are easier to solve with streams</h3>
+                    <p>If the user clicks <span class="yellow">x times</span> within <span class="yellow">y milliseconds</span> print the class of the element that was clicked.</p>
+                    <pre><code data-trim data-noescape>
+                    click$
+                    .compose(throttle(<span class="yellow">y</span>))
+                    .map(event => {
+                        const numClick$ = click$.endWhen(xs.periodic(<span class="yellow">y</span>).take(1))
+                            .fold(n => n + 1, 1)
+                            .last();
+
+                        return numClick$
+                            .filter(n => n >= <span class="yellow">x</span>)
+                            .mapTo(event.target.className);
+                    }).flatten()
+                    .addListener({ next: console.log });
+                    </code></pre>
+                    <p class="small">Runnable example on <a target="_blank" href="https://www.webpackbin.com/bins/-KuFpNWjME_jo84Iqhkd">webpackbin</a></p>
+            <div>
 		</div>
 
 		<script src="lib/js/head.min.js"></script>
@@ -37,11 +101,17 @@
 			// - https://github.com/hakimel/reveal.js#configuration
 			// - https://github.com/hakimel/reveal.js#dependencies
 			Reveal.initialize({
+                slideNumber: true,
+                math: {
+                    mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+                    config: 'TeX-AMS_HTML-full'
+                },
 				dependencies: [
 					{ src: 'plugin/markdown/marked.js' },
 					{ src: 'plugin/markdown/markdown.js' },
 					{ src: 'plugin/notes/notes.js', async: true },
-					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/math/math.js', async: true }
 				]
 			});
 		</script>
