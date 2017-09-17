@@ -74,6 +74,21 @@
                 </section>
                 <section>
                     <h3>What problems are easier to solve with streams</h3>
+                    <p>Make an <span class="yellow">initial request</span> to the server and write the data to the DOM. Update the data with a <span class="yellow">websocket</span>.</p>
+                    <pre><code data-trim data-noescape>
+                    const ws$ = websocket$.map(message => message.payload);
+                    const http$ = response$.map(res => res.body)
+                        .map(xs.fromArray)
+                        .flatten();
+
+                    xs.merge(ws$, http$)
+                        .fold((data, x) => data.concat(x), [])
+                        .compose(debounce(50)) //Batch DOM updates
+                        .subscribe({ next: updateDOM });
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>What problems are easier to solve with streams</h3>
                     <p>If the user clicks <span class="yellow">x times</span> within <span class="yellow">y milliseconds</span> print the class of the element that was clicked.</p>
                     <pre><code data-trim data-noescape>
                     click$
@@ -90,6 +105,17 @@
                     .addListener({ next: console.log });
                     </code></pre>
                     <p class="small">Runnable example on <a target="_blank" href="https://www.webpackbin.com/bins/-KuFpNWjME_jo84Iqhkd">webpackbin</a></p>
+                </section>
+                <section>
+                    <h1 class="yellow">Cycle.js</h1>
+                </section>
+                <section>
+                    <blockquote>Cycle is like the physicist’s dream of a unified theory of everything, but for JavaScript.</blockquote>
+                    <p style="font-style: italic">Nick Johnstone</p>
+                </section>
+                <section>
+                    <img src="./everywhere_meme.jpg" />
+                </section>
             <div>
 		</div>
 
