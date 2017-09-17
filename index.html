@@ -44,7 +44,7 @@
                 </section>
                 <section>
                     <h3>Transforming data - <span class="yellow">synchronous</span></h3>
-                    <pre><code data-trim data-noescape>
+                    <pre><code data-trim data-noescape class="hljs javascript">
                     [1, 2, 3, 4, 5]
                         .map(x => x * 2)
                         .forEach(x => console.log(x));
@@ -52,7 +52,7 @@
                 </section>
                 <section>
                     <h3>Transforming data - <span class="yellow">asynchronous</span></h3>
-                    <pre><code data-trim data-noescape>
+                    <pre><code data-trim data-noescape class="hljs javascript">
                     Promise.resolve([1, 2, 3, 4, 5]) //Or from API
                         .then(arr => arr
                             .map(x => x * 2)
@@ -62,7 +62,7 @@
                 </section>
                 <section>
                     <h3>Transforming data - <span class="yellow">streaming</span></h3>
-                    <pre><code data-trim data-noescape>
+                    <pre><code data-trim data-noescape class="hljs javascript">
                     Observable.from([1, 2, 3, 4, 5]) //Or from a websocket
                         .map(x => x * 2)
                         .subscribe(x => console.log(x));
@@ -75,7 +75,7 @@
                 <section>
                     <h3>What problems are easier to solve with streams</h3>
                     <p>Make an <span class="yellow">initial request</span> to the server and write the data to the DOM. Update the data with a <span class="yellow">websocket</span>.</p>
-                    <pre><code data-trim data-noescape>
+                    <pre><code data-trim data-noescape class="hljs javascript">
                     const ws$ = websocket$.map(message => message.payload);
                     const http$ = response$.map(res => res.body)
                         .map(xs.fromArray)
@@ -90,7 +90,7 @@
                 <section>
                     <h3>What problems are easier to solve with streams</h3>
                     <p>If the user clicks <span class="yellow">x times</span> within <span class="yellow">y milliseconds</span> print the class of the element that was clicked.</p>
-                    <pre><code data-trim data-noescape>
+                    <pre><code data-trim data-noescape class="hljs javascript">
                     click$
                     .compose(throttle(<span class="yellow">y</span>))
                     .map(event => {
@@ -115,6 +115,57 @@
                 </section>
                 <section>
                     <img src="./everywhere_meme.jpg" />
+                </section>
+                <section>
+                    <p>A Cycle.js app is just a function taking <span class="yellow">sources</span> as input and returning <span class="yellow">sinks</span> as result.</p>
+                </section>
+                <section>
+                    <img style="background-color: white;" src="./cycle-app.svg" />
+                </section>
+                <section>
+                    <h3>Cycle.js - <span class="yellow">short summary</span></h3>
+                    <ul>
+                        <li>Common interface are streams</li>
+                        <li>Cycle app = function from sources to sinks</li>
+                        <li>Expandable with own side effects</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>A simple counter app example</h3>
+                </section>
+                <section>
+                    <pre><code data-trim data-noescape style="height: auto !impotant; max-height: 100%;" class="hljs javascript">
+                    import xs from 'xstream';
+                    import { div, button, p } from '@cycle/dom';
+
+                    function main(sources) {
+                      const decrement$ = sources.DOM
+                        .select('.decrement').events('click').mapTo(-1);
+
+                      const increment$ = sources.DOM
+                        .select('.increment').events('click').mapTo(+1);
+
+                      const action$ = xs.merge(decrement$, increment$);
+                      const count$ = action$.fold((x, y) => x + y, 0);
+
+                      const vdom$ = count$.map(count =>
+                        div([
+                          button('.decrement', 'Decrement'),
+                          button('.increment', 'Increment'),
+                          p('Counter: ' + count)
+                        ])
+                      );
+                      return {
+                        DOM: vdom$
+                      };
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <img src="./devtool.png" style="margin-top: -0.5em" />
+                </section>
+                <section>
+                    <img src="./dataflow-minimap.svg" style="width: 50%; margin-top: -0.6em" />
                 </section>
             <div>
 		</div>
