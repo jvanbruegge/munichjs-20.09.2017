@@ -134,7 +134,7 @@
                     <h3>A simple counter app example</h3>
                 </section>
                 <section>
-                    <pre><code data-trim data-noescape style="height: auto !impotant; max-height: 100%;" class="hljs javascript">
+                    <pre><code data-trim data-noescape style="height: auto !impotant; max-height: 100%; margin-top: -1em;" class="hljs javascript">
                     import xs from 'xstream';
                     import { div, button, p } from '@cycle/dom';
 
@@ -415,7 +415,163 @@
                     }
                     </code></pre>
                 </section>
+                <section>
+                    <h3 class="yellow">Lenses</h3>
+                    <p>Compare the parent state to the child state</P>
+                    <pre><code data-trim style="height: auto !impotant; max-height: 100%;" class="hljs json">
+                    {
+                        counterA: 5,
+                        counterB: 3
+                    }
 
+                    //childA
+                    5
+
+                    //childB
+                    3
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="yellow">Lenses</h3>
+                    <p>We can model this behavior</P>
+                    <pre><code data-trim style="height: auto !impotant; max-height: 100%;" class="hljs haskell">
+                    -- on the source (state$)
+                    isolate :: ParentState -> ChildState
+
+                    -- on the sink (reducer$)
+                    isolate :: (ParentState, ChildState) -> ParentState
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="yellow">Lenses</h3>
+                    <p>We can model this behavior</P>
+                    <pre><code data-trim style="height: auto !impotant; max-height: 100%;" class="hljs haskell">
+                    -- on the source (state$)
+                    get :: ParentState -> ChildState
+
+                    -- on the sink (reducer$)
+                    set :: (ParentState, ChildState) -> ParentState
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="yellow">Lenses</h3>
+                    <p>We can model this behavior</P>
+                    <pre><code data-trim style="height: auto !impotant; max-height: 100%;" class="hljs javascript">
+                    const lens = {
+                        get,
+                        set
+                    };
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="yellow" style="margin-top: -0.5em;">Lenses</h3>
+                    <pre><code data-trim style="height: auto !impotant; max-height: 100%; margin-top: -1em;" class="hljs javascript">
+                    const halfLens = {
+                        get: state => state.counterA / 2;
+                        set: (state, n) => ({
+                            ...state,
+                            counterA: n * 2
+                        })
+                    };
+
+                    function main(sources) {
+                      const counter1 = isolate(Counter, 'counterA')(sources);
+                      const counter2 = isolate(Counter, {
+                          onion: halfLens,
+                          '*': 'counterB'
+                      })(sources);
+
+                      const vdom$ = xs.combine(counter1.DOM, counter2.DOM)
+                        .map(view);
+
+                      return {
+                        DOM: vdom$,
+                        onion: xs.merge(counter1.onion, counter2.onion),
+                      };
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="yellow" style="margin-top: -0.5em;">Collections</h3>
+                    <pre><code data-trim style="height: auto !impotant; width: 110%; max-height: 100%; margin-top: -1em;" class="hljs typescript">
+                    interface TabbarState {
+                        active: number;
+                        tabs: TabState[];
+                    }
+                    interface TabState {
+                        isActive: boolean; //Automaticly set by the lens
+                        name: string;
+                    }
+                    const selectionLens = {
+                        get: state => state.tabs.map(t => ({
+                            ...t,
+                            isActive: t.id === state.active
+                        })),
+                        set: (state, tabs) => ({
+                            ...state,
+                            active: tabs.reduce((acc, curr) => {
+                                return curr.isActive && curr.id !== state.active ?
+                                    curr.id :
+                                    acc;
+                                }, state.active),
+                            tabs: tabs.map(omit('isActive'))
+                        })
+                    };
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="yellow">Collections</h3>
+                    <pre><code data-trim style="height: auto !impotant; max-height: 100%; width: 110%;" class="hljs javascript">
+                    const TabbarComponent = makeCollection({
+                        item: TabComponent,
+                        itemKey: itemState => itemState.name,
+                        itemScope: index => index,
+                        collectSinks: instances => ({
+                            DOM: instances.pickCombine('DOM').map(children =>
+                                <ul>{ children }</ul>
+                            ),
+                            onion: xs.merge(
+                                xs.of(() => initialState),
+                                instances.pickMerge('onion')
+                            )
+                        })
+                    });
+
+                    export default const isolatedTabbar = isolate(TabbarComponent, {
+                        onion: selectionLens,
+                        '*': null
+                    });
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Quick <span class="yellow">FAQ</span></h3>
+                    <ul>
+                        <li class="fragment fade-in">
+                            <span class="yellow">How do I start?</span>
+                            <a href="https://cycle.js.org/#-dataflow">Read the docs</a> and/or watch the <a href="https://egghead.io/courses/cycle-js-fundamentals">egghead.io course</a>
+                        </li>
+                        <li class="fragment fade-in">
+                            <span class="yellow">Are the slides online?</span>
+                            Yes, on github: <a href="https://jvanbruegge.github.io/munichjs-20.09.2017/">https://jvanbruegge.github.io/munichjs-20.09.2017/</a>
+                        </li>
+                        <li class="fragment fade-in">
+                            <span class="yellow">Do I have to use xstream?</span>
+                            No, you can also use RxJS or Most.js
+                        </li>
+                        <li class="fragment fade-in">
+                            <span class="yellow">How big is the community?</span>
+                            Currently over 7000 github stars, active support on gitter
+                        </li>
+                        <li class="fragment fade-in">
+                            <span class="yellow">How is the financial support?</span>
+                            We are on OpenCollective, being sponsored by Verizon and others
+                        </li>
+
+                    </ul>
+                </section>
+                <section>
+                    <h2><span class="yellow">Other</span> questions</h2>
+                </section>
             <div>
 		</div>
 
