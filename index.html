@@ -138,7 +138,7 @@
                     import xs from 'xstream';
                     import { div, button, p } from '@cycle/dom';
 
-                    function main(sources) {
+                    function Counter(sources) {
                       const decrement$ = sources.DOM
                         .select('.decrement').events('click').mapTo(-1);
 
@@ -238,8 +238,8 @@
                     function main(sources) {
                     - const counter1 = Counter(sources);
                     - const counter2 = Counter(sources);
-                    + const counter1 = isolate(Counter, 'counter1')(sources);
-                    + const counter2 = isolate(Counter, 'counter2')(sources);
+                    + const counter1 = isolate(Counter, 'counterA')(sources);
+                    + const counter2 = isolate(Counter, 'counterB')(sources);
 
 
                       const vdom$ = xs.combine(counter1.DOM, counter2.DOM)
@@ -279,6 +279,143 @@
                     const wrappedMain = modalify(main);
                     </code></pre>
                 </section>
+                <section>
+                    <h2 class="yellow">Drivers</h2>
+                </section>
+                <section>
+                    <img style="background-color: white;" src="./cycle-app.svg" />
+                </section>
+                <section>
+                    <h3>Writing your own drivers -<br> <span class="yellow">write-only</span></h3>
+                    <pre><code data-trim style="height: auto !impotant; width: 110% !important; max-height: 100%;" class="hljs javascript">
+
+                    function logDriver(sink$) {
+                        sink$.addListener({
+                            next: console.log
+                        });
+                        //We do not return anything --> write-only driver
+                    }
+
+                    run(main, {
+                        log: logDriver
+                    });
+
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Writing your own drivers -<br> <span class="yellow">read-only</span></h3>
+                    <pre><code data-trim style="height: auto !impotant; width: 110% !important; max-height: 100%;" class="hljs javascript">
+
+                    function websocketDriver(/* no argument --> read-only */) {
+                        let websocket = undefined;
+                        return xs.create({
+                            start: listener => {
+                                websocket = new Websocket(myEndpoint);
+                                websocket.onmessage = listener.next;
+                            },
+                            stop: () => {
+                                websocket.close();
+                            }
+                        });
+                    }
+
+                    run(main, {
+                        ws: websocketDriver
+                    });
+
+                    </code></pre>
+                </section>
+                <section>
+                    <h2 class="yellow">State management</h2>
+                </section>
+                <section>
+                    <h3>Redux-like</h3>
+                    <pre><code data-trim style="height: auto !impotant; width: 110% !important; max-height: 100%;" class="hljs javascript">
+                    function reduxify(main, initialState, rootReducer) {
+                        return function(sources) {
+                            const actionProxy$ = xs.create();
+
+                            const state$ = actionProxy$
+                                .fold(rootReducer, initialState);
+
+                            const sinks = main({ ...sources, state: state$ });
+
+                            actionProxy$.imitate(sinks.state);
+                            delete sinks.state;
+
+                            return sinks;
+                        }
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="yellow">Onionify</h3>
+                    <p>A fractal state management tool for Cycle.js applications.</p>
+                </section>
+                <section>
+                    <pre><code data-trim data-noescape style="height: auto !impotant; max-height: 100%; margin-top: -1.5em;" class="hljs javascript">
+                    import xs from 'xstream';
+
+                    function Counter(sources) {
+                      const decrement$ = sources.DOM
+                        .select('.decrement').events('click')
+                        .mapTo(state => state - 1);
+
+                      const increment$ = sources.DOM
+                        .select('.increment').events('click')
+                        .mapTo(state => state + 1);
+
+                      const reducer$ = xs.merge(decrement$, increment$);
+
+                      const vdom$ = sources.onion.state$.map(count =>
+                        div([
+                          button('.decrement', 'Decrement'),
+                          button('.increment', 'Increment'),
+                          p('Counter: ' + count)
+                        ])
+                      );
+                      return {
+                        DOM: vdom$,
+                        onion: reducer$
+                      };
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="yellow">Fractal state</h3>
+                    <pre><code data-trim style="height: auto !impotant; max-height: 100%; margin-top: -0.5em;" class="hljs javascript">
+                    import Counter from './counter';
+
+                    function main(sources) {
+                      const counter1 = isolate(Counter, 'counterA')(sources);
+                      const counter2 = isolate(Counter, 'counterB')(sources);
+
+
+                      const vdom$ = xs.combine(counter1.DOM, counter2.DOM)
+                        .map(children =>
+                            <div>
+                                <h1>Some children</h1>
+                                { children }
+                            </div>
+                        );
+
+                      return {
+                        DOM: vdom$,
+                        onion: xs.merge(counter1.onion, counter2.onion),
+                        log: sources.onion.state$ //what will be printed?
+                      };
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim style="height: auto !impotant; max-height: 100%;" class="hljs json">
+                    {
+                        counterA: 5,
+                        counterB: 3
+                    }
+                    </code></pre>
+                </section>
+
             <div>
 		</div>
 
