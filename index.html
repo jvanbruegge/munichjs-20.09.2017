@@ -198,7 +198,86 @@
                       };
                     }
                     </code></pre>
+                </section>
+                <section>
+                    <h3>Wrappable - <span class="yellow">isolation</span></h3>
+                    <pre><code data-trim style="height: auto !impotant; width: 110% !important; max-height: 100%;" class="hljs javascript">
+                    import Counter from './counter';
 
+                    function main(sources) {
+                      const counter1 = Counter(sources);
+                      const counter2 = Counter(sources);
+
+                      const vdom$ = xs.combine(counter1.DOM, counter2.DOM)
+                        .map(children =>
+                            <div>
+                                <h1>Some children</h1>
+                                { children }
+                            </div>
+                        );
+
+                      return {
+                        DOM: vdom$
+                      };
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="yellow">Problem</h3>
+                    <p>Both counters are activated if you press <span class="yellow">any</span> button</p>
+                </section>
+                <section>
+                    <h3 class="yellow">Solution</h3>
+                    <p>Isolate them!</p>
+                </section>
+                <section>
+                    <h3>Wrappable - <span class="yellow">isolation</span></h3>
+                    <pre><code data-trim style="height: auto !impotant; width: 110% !important; max-height: 100%;" class="hljs diff">
+                    import Counter from './counter';
+
+                    function main(sources) {
+                    - const counter1 = Counter(sources);
+                    - const counter2 = Counter(sources);
+                    + const counter1 = isolate(Counter, 'counter1')(sources);
+                    + const counter2 = isolate(Counter, 'counter2')(sources);
+
+
+                      const vdom$ = xs.combine(counter1.DOM, counter2.DOM)
+                        .map(children =>
+                            <div>
+                                <h1>Some children</h1>
+                                { children }
+                            </div>
+                        );
+
+                      return {
+                        DOM: vdom$
+                      };
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Wrappable - <span class="yellow">helpers</span></h3>
+                    <pre><code data-trim style="height: auto !impotant; width: 110% !important; max-height: 100%;" class="hljs javascript">
+                    import Counter from './counter';
+
+                    function main(sources) {
+                      const vdom$ = xs.of(<button className="btn">Open modal</button>);
+
+                      const modal$ = sources.DOM.select('.btn').events('click')
+                        .mapTo({
+                          type: 'open',
+                          component: Counter
+                        });
+
+                      return {
+                        DOM: vdom$,
+                        modal: modal$
+                      };
+                    }
+
+                    const wrappedMain = modalify(main);
+                    </code></pre>
                 </section>
             <div>
 		</div>
