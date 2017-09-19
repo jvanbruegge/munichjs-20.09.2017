@@ -436,10 +436,10 @@
                     <p>We can model this behavior</P>
                     <pre><code data-trim style="height: auto !impotant; max-height: 100%;" class="hljs haskell">
                     -- on the source (state$)
-                    isolate :: ParentState -> ChildState
+                    isolateSource :: ParentState -> ChildState
 
                     -- on the sink (reducer$)
-                    isolate :: (ParentState, ChildState) -> ParentState
+                    isolateSinks :: (ParentState, ChildState) -> ParentState
                     </code></pre>
                 </section>
                 <section>
